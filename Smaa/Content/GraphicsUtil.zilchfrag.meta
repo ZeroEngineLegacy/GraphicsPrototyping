@@ -1,0 +1,9 @@
+[Version:1]
+TextContent 
+{
+	ZilchFragmentBuilder 
+	{
+		var Name = "GraphicsUtil"
+		var ResourceId = 0x59b403df9c428007
+	}
+}

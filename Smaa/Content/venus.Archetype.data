@@ -1,0 +1,62 @@
+[Version:1]
+Cog 
+{
+	var Name = "venus"
+	Transform 
+	{
+		var Translation = Real3{0, 0, 0}
+		var Scale = Real3{1, 1, 1}
+		var Rotation = Quaternion{0, 0, 0, 1}
+	}
+	Hierarchy 
+	{
+		Cog [Id:0x592e1f25de2dd436]
+		{
+			var Name = "Box001PreRotation"
+			Transform 
+			{
+				var Translation = Real3{0, 0, 0}
+				var Scale = Real3{1, 1, 1}
+				var Rotation = Quaternion{-0.707106829, 0, 0, 0.707106769}
+			}
+			Hierarchy 
+			{
+				Cog [Id:0x592e1f25de2dd43e]
+				{
+					var Name = "Box001Scaling"
+					Transform 
+					{
+						var Translation = Real3{0, 0, 0}
+						var Scale = Real3{2.53999996, 2.53999996, 2.53999996}
+						var Rotation = Quaternion{0, 0, 0, 1}
+					}
+					Hierarchy 
+					{
+						Cog [Id:0x592e1f25de2dd43f]
+						{
+							var Name = "Box001"
+							Transform 
+							{
+								var Translation = Real3{0, 0, 0}
+								var Scale = Real3{1, 1, 1}
+								var Rotation = Quaternion{0, 0, 0, 1}
+							}
+							Model 
+							{
+								var Visible = true
+								var ViewCulling = true
+								var VisibilityEvents = true
+								var OverrideBoundingBox = false
+								var LocalAabbCenter = Real3{0, 0, 0}
+								var LocalAabbHalfExtents = Real3{1, 1, 1}
+								var GroupSortValue = 0
+								var Material = "583afb5e7bf75e18:ZeroMaterial"
+								var Mesh = "592e1f25de370c42:venus"
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

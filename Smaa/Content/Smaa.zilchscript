@@ -1,0 +1,169 @@
+//http://www.iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
+//http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/readings/reshetov09_mlaa.pdf
+//Practical Morphological Anti-Aliasing GPU-Pro 2
+
+
+[RunInEditor]
+class Smaa : ZilchComponent
+{
+  
+  [Property] var EnableSMAA : Boolean = true;
+  //Detect more edges with high setting.
+  [Property] var EdgeDetection : DetectionChance = DetectionChance.Medium;
+  //Switch to Edge and Blend Area to debug intermidiate textures.
+  [Property] var TargetTexture : SMAARenderTargets = SMAARenderTargets.FinalBlend;
+  //Switch to Anti-Alias a debug texture of your choice.
+  [Property] var DebugSource :TextureTypes = TextureTypes.Scene;
+  [Property] var ClearColor : Real4 = Real4(0, 0, 0, 0);
+  //Draw editor debug over the SMAA rendered scene
+  [Property] var DrawDebug : Boolean = true;
+  //DebugSMAATexture Source
+  [Property] var DebugTexture : Texture;
+  //Do not change this texture.
+  [Property] var AreaTexture : Texture;
+  //Do not change this texture.
+  [Property] var SearchTexture : Texture;
+
+  function Initialize(init : CogInitializer)
+  {
+    Zero.Connect(this.Owner, Events.RenderTasksUpdate, this.OnRenderTasksUpdate);
+  }
+  
+  function OnRenderTasksUpdate(event : RenderTasksEvent)
+  {
+    // Sampler settings for filtering edges texture.
+    var samplerSettings = SamplerSettings();
+    samplerSettings.AddressingX = TextureAddressing.Clamp;
+    samplerSettings.AddressingY = TextureAddressing.Clamp;
+    samplerSettings.Filtering = TextureFiltering.Bilinear;
+    samplerSettings.CompareFunc = TextureCompareFunc.Always;
+    samplerSettings.CompareMode = TextureCompareMode.Enabled;
+    
+    var size = event.ViewportSize;
+    var color = event.GetFinalTarget(size, TextureFormat.RGBA8, samplerSettings);
+    // ColorCopy does not need to exist, it exists for debug capabilities.
+    var colorCopy = event.GetRenderTarget(size, TextureFormat.RGBA8, samplerSettings);
+    var depth = event.GetRenderTarget(size, TextureFormat.Depth32, samplerSettings);
+    var edges = event.GetRenderTarget(size, TextureFormat.RGBA8, samplerSettings);
+    var areas = event.GetRenderTarget(size, TextureFormat.RGBA8, samplerSettings);
+    var finalBlend = event.GetRenderTarget(size, TextureFormat.RGBA8, samplerSettings);
+    
+    var renderSettings = RenderSettings() {CullMode = CullMode.Disabled};
+    renderSettings.ColorTarget = colorCopy;
+    renderSettings.DepthTarget = depth;
+    renderSettings.CullMode = CullMode.Disabled;
+    renderSettings.DepthSettings.DepthMode = DepthMode.Disabled;
+    renderSettings.DepthSettings.DepthCompareFunc = TextureCompareFunc.LessEqual;
+    
+    // Copy the back-buffer to render it as a postFx below.
+    var copyTexture  = CopyTarget();
+    copyTexture.Texture = color.Texture;
+    event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
+    event.AddRenderTaskPostProcess(renderSettings, copyTexture);
+    
+    var sourceTexture = colorCopy.Texture;
+    if (this.DebugSource == TextureTypes.DebugSMAATexture)
+      sourceTexture = this.DebugTexture;
+
+    if (this.EnableSMAA)
+    {      
+      // First pass.
+      var postProcess = EdgeDetectionPostProcess();
+      if(this.EdgeDetection == DetectionChance.Medium)
+        postProcess.ComparisonThreshold = 0.1;
+      else
+        postProcess.ComparisonThreshold = 0.01;
+      postProcess.Texture = sourceTexture;
+      renderSettings.ColorTarget = edges;
+      event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
+      event.AddRenderTaskPostProcess(renderSettings, postProcess);
+      
+      // Second pass.
+      var areasPostProcess = BlendByArea();
+      if (this.TargetTexture == SMAARenderTargets.Area)
+        areasPostProcess.DebugMode = true;
+      areasPostProcess.EdgesTexture = edges.Texture;
+      areasPostProcess.SearchTexture = this.SearchTexture;
+      areasPostProcess.AreaTexture = this.AreaTexture;
+      areasPostProcess.SearchSamples = 16.0;
+      renderSettings.ColorTarget = areas;
+      event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
+      event.AddRenderTaskPostProcess(renderSettings, areasPostProcess);
+            
+      // Final pass.
+      var blendPostProcess = NeighborhoodBlend();
+      blendPostProcess.AreaTexture = areas.Texture;
+      blendPostProcess.ColorTexture = sourceTexture;
+      renderSettings.ColorTarget = finalBlend;
+      event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
+      event.AddRenderTaskPostProcess(renderSettings, blendPostProcess);
+  }
+  
+    // Finally render.
+    var renderPass = CopyTarget();
+    renderPass.Texture = sourceTexture;
+    if(this.EnableSMAA)
+    {
+      if (this.TargetTexture == SMAARenderTargets.FinalBlend)
+        renderPass.Texture = finalBlend.Texture;
+      if (this.TargetTexture == SMAARenderTargets.Area)
+        renderPass.Texture = areas.Texture;
+      if (this.TargetTexture == SMAARenderTargets.Edge)
+        renderPass.Texture = edges.Texture;
+    }
+
+    renderSettings.ColorTarget = color;
+    event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
+    event.AddRenderTaskPostProcess(renderSettings, renderPass);
+    
+    if (this.DrawDebug)
+    {
+      var debugSettings = RenderSettings();
+      debugSettings.ColorTarget = color;
+      debugSettings.DepthTarget = depth;
+      debugSettings.CullMode = CullMode.Disabled;
+
+      debugSettings.BlendSettings.BlendMode = BlendMode.Separate;
+      debugSettings.BlendSettings.BlendEquation = BlendEquation.Add;
+      debugSettings.BlendSettings.SourceFactor = BlendFactor.SourceAlpha;
+      debugSettings.BlendSettings.DestFactor = BlendFactor.InvSourceAlpha;
+      debugSettings.BlendSettings.SourceFactorAlpha = BlendFactor.One;
+      debugSettings.BlendSettings.DestFactorAlpha = BlendFactor.One;
+
+      debugSettings.DepthSettings.DepthMode = DepthMode.Read;
+      debugSettings.DepthSettings.DepthCompareFunc = TextureCompareFunc.LessEqual;
+
+      event.AddRenderTaskRenderPass(debugSettings, RenderGroup.DebugDraw, ColorOutput());
+
+      debugSettings.DepthSettings.DepthMode = DepthMode.Disabled;
+      event.AddRenderTaskRenderPass(debugSettings, RenderGroup.DebugDrawOnTop, ColorOutput());
+    }
+    
+    // Release the rendertargets used.
+    colorCopy.Release();
+    depth.Release();
+    edges.Release();
+    areas.Release();
+    finalBlend.Release();
+  }
+}
+
+// Settings Enums.
+enum SMAARenderTargets
+{
+  Edge,
+  Area,
+  FinalBlend
+}
+
+enum TextureTypes
+{
+  DebugSMAATexture,
+  Scene
+}
+
+enum DetectionChance
+{
+  High,
+  Medium
+}

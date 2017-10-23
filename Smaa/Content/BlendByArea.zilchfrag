@@ -1,0 +1,228 @@
+[Pixel][PostProcess]
+struct BlendByArea
+{
+  [BuiltInInput] var ViewportSize : Real2;
+  [BuiltInInput] var InverseViewportSize : Real2;
+  [FragmentInput][StageInput] var Uv : Real2;
+  
+  //This Shader specific inputs
+  [Input] var AreaTexture : Sampler2d;
+  [Input] var SearchTexture : Sampler2d;
+  [Input] var EdgesTexture : Sampler2d;
+  [Input] var SearchSamples : Real = 16.0;
+  [Input] var DebugMode : Boolean = false;
+  [Output] var Target0 : Real4;
+  
+  function AddLength(offset : Real, e : Real2) : Real
+  {
+    // Search texture returns an offset to be added to our search distace calculation
+    // based on the 4 pixels we feteched (e).
+    // The idea is to do a reverse lookup and re-creating the 4 binary edge pixel values
+    // without having to do 4 seprate memory accesses (Optimization).
+    var textureSize = Real2(66.0, 33.0);
+    var textureSizePixels = Real2(1.0/64.0, 1.0/16.0);
+    // Texture Y is flipped and scaled to half.
+    var scale = textureSize * Real2(0.5, -1.0);
+    var bias = textureSize * Real2(offset, 1.0);
+    
+    scale += Real2(-1.0, 1.0);
+    bias += Real2(0.5, -0.5);
+    scale *= textureSizePixels;
+    bias *= textureSizePixels;
+
+    return this.SearchTexture.Sample((scale * e) + bias).X;
+  }
+  
+  // Horizontal search functions.
+  function SearchXLeft() : Real
+  {
+    // Offset y coords to sample in-b/w pixels to fetch approximation of 4 pixels
+    var texcoord = (this.InverseViewportSize * Real2(-0.25, -0.125)) + this.Uv;
+    // Store the left end of the search, also offsetted by the above value.
+    var end = (this.InverseViewportSize.X * -2.0 * this.SearchSamples) + texcoord.X;
+    var e = Real2(0.0, 1.0);
+    
+   // Stop if end reached, no edgel on top, or found crossing edge.
+    while(texcoord.X > end && e.Y > 0.8281 && e.X == 0.0)
+    {
+      // Do a bilinear sample here, fetching 4 neighboring pixels.
+      // Note that e might not be [0-1] anymore.
+      e = this.EdgesTexture.Sample(texcoord).XY;
+      // Move left by 2 pixels for the next 4 samples.
+      texcoord = texcoord - Real2(2.0 * this.InverseViewportSize.X, 0.0);
+    }
+    
+    // Takes in the bilinearly interpolated e and returns a 0,1 or 2.
+    var addedLength = this.AddLength(0.0, e);
+    // Due to the below 3 steps we add 3.25 to our offset calculation
+    // We correct the previous (-0.25, -0.125) offset we applied above.
+    // The searches are bias by 1.
+    // Remove length added by the last iteration.
+    var offset = (-2.0 *  addedLength) + 3.25;
+    return (this.InverseViewportSize.X * offset) + texcoord.X;
+  }
+  
+  // The next three functions below follow the same guidelines as the one above.
+  function SearchXRight() : Real
+  {
+    var texcoord = (this.InverseViewportSize * Real2(1.25, -0.125)) + this.Uv;
+    var end = (this.InverseViewportSize.X * 2.0 * this.SearchSamples) + texcoord.X;
+    var e = Real2(0.0, 1.0);
+     
+    while(texcoord.X < end && e.Y > 0.8281 && e.X == 0.0)
+    {
+      e = this.EdgesTexture.Sample(texcoord).XY;
+      texcoord = texcoord + Real2(2.0 * this.InverseViewportSize.X, 0.0);
+    }
+    
+    var addedLength = this.AddLength(0.5, e);
+    var offset = (-2.0 *  addedLength) + 3.25;
+    return (-this.InverseViewportSize.X * offset) + texcoord.X;
+  }
+  
+  // Vertical search functions.
+  function SearchYTop() : Real
+  {
+    var texcoord = (this.InverseViewportSize * Real2(-0.125, -0.25)) + this.Uv;
+    var end = (this.InverseViewportSize.Y * -2.0 * this.SearchSamples) + texcoord.Y;
+    var e = Real2(1.0, 0.0);
+    
+    while(texcoord.Y > end && e.X > 0.8281 && e.Y == 0.0)
+    {
+      e = this.EdgesTexture.Sample(texcoord).XY;
+      texcoord = -Real2(0.0, 2.0) * this.InverseViewportSize + texcoord;
+    }
+    
+    var addedLength = this.AddLength(0.0, e.YX);
+    var offset = (-2.0 *  addedLength) + 3.25;
+    return (this.InverseViewportSize.Y * offset) + texcoord.Y;
+  }
+  
+  function SearchYBottom() : Real
+  {
+    var texcoord = (this.InverseViewportSize * Real2(-0.125, 1.25)) + this.Uv;
+    var end = (this.InverseViewportSize.Y * 2.0 * this.SearchSamples) + texcoord.Y;
+    var e = Real2(1.0, 0.0);
+     
+    while(texcoord.Y < end && e.X > 0.8281 && e.Y == 0.0)
+    {
+      e = this.EdgesTexture.Sample(texcoord).XY;
+      texcoord = Real2(0.0, 2.0) * this.InverseViewportSize + texcoord;
+    }
+    
+    var addedLength = this.AddLength(0.5, e.YX);
+    var offset = (-2.0 *  addedLength) + 3.25;
+    return (-this.InverseViewportSize.Y * offset) + texcoord.Y;
+  }
+  
+  function HorizontalSharpCorner(d : Real2, area : Real2, coords: Real4) : Real2
+  {
+    
+    // 75% rounding for sharp edges.
+    var roundingFactor = 0.25;
+    // Store the higher distance as a binary.
+    var distanceLR = Math.Step(d.XY, d.YX);
+    var rounding = (1.0 - roundingFactor) * distanceLR;
+    // If d.X and d.Y are equal.
+    rounding /= (distanceLR.X + distanceLR.Y);
+    
+    // Compute the overall rounding factor.
+    // Consider all sides for the overall factor.
+    var factor = Real2(1.0, 1.0);
+    factor.X -= rounding.X * this.EdgesTexture.Sample(coords.XY + Real2(0.0, this.InverseViewportSize.Y)).X;
+    factor.X -= rounding.Y * this.EdgesTexture.Sample(coords.ZW + this.InverseViewportSize.XY).X;
+    factor.Y -= rounding.X * this.EdgesTexture.Sample(coords.XY + Real2(0.0, -2.0 * this.InverseViewportSize.Y)).X;
+    factor.Y -= rounding.Y * this.EdgesTexture.Sample(coords.ZW + Real2(this.InverseViewportSize.X, -2.0 * this.InverseViewportSize.Y)).X;
+    
+    return area * Math.Saturate(factor);
+  }
+  
+  function VerticalSharpCorner(d : Real2, area : Real2, coords : Real4) : Real2
+  {
+    var roundingFactor = 0.25;
+    var distanceUD = Math.Step(d.XY, d.YX);
+    var rounding = (1.0 - roundingFactor) * distanceUD;
+    rounding /= (distanceUD.X + distanceUD.Y);
+    
+    var factor = Real2(1.0, 1.0);
+    factor.X -= rounding.X * this.EdgesTexture.Sample(coords.XY + Real2(this.InverseViewportSize.X,0.0)).Y;
+    factor.X -= rounding.Y * this.EdgesTexture.Sample(coords.ZW + this.InverseViewportSize.XY).Y;
+    factor.Y -= rounding.X * this.EdgesTexture.Sample(coords.XY + Real2(-2.0 * this.InverseViewportSize.X, 0.0)).Y;
+    factor.Y -= rounding.Y * this.EdgesTexture.Sample(coords.ZW + Real2(-2.0 * this.InverseViewportSize.X, this.InverseViewportSize.Y)).Y;
+    
+    return area * Math.Saturate(factor);
+  }
+  
+  // Sample into the area texture for blendWeights.
+  // It is a 4D table mapped onto a 2D texture.
+  // Look at the python scripts to generate the texture for more details on this function.
+  function AddArea(distance : Real2, e1 : Real, e2 : Real, offset : Real) : Real2
+  {
+    var areaTexMaxDistance = 16.0;
+    var areaTexPixelSize = Real2(1.0/160.0, 1.0/560.0);
+    var texcoord = (areaTexMaxDistance.XX * Math.Round(4.0 * Real2(e1,e2))) + distance;
+    texcoord = (texcoord * areaTexPixelSize) + (0.5 * areaTexPixelSize);
+    return this.AreaTexture.Sample(texcoord).XY;
+  }
+
+  function Main()
+  {
+      // Y or Green is the top edge, X or Red is the left edge.
+      var edge = this.EdgesTexture.Sample(this.Uv).XY;
+      var area = Real4(0.0, 0.0, 0.0, 0.0);        
+      var pixelCoord = this.Uv * this.ViewportSize;
+      
+      if(edge.Y > 0.0) 
+      {
+        var distance = Real2();
+        var coords = Real3();
+        
+        // Find the distance to the left/right and offset y for bilinear interpolation.
+        coords.X = this.SearchXLeft();
+        coords.Y = this.Uv.Y - 0.25 * this.InverseViewportSize.Y;
+        coords.Z = this.SearchXRight();
+        distance.X = coords.X;
+        distance.Y = coords.Z;
+        
+        // Distance in number of pixels from the current pixel to the left and right.
+        distance = Math.Abs(Math.Round((this.ViewportSize.X * distance.XY) - pixelCoord.XX));
+                
+        // Sample the left/right crossing edges, again, 4 pixel edges are fetched at once.
+        // That are used in the area function to get blend weights.
+        var e1 = this.EdgesTexture.Sample(coords.XY).X;
+        var e2 = this.EdgesTexture.Sample(coords.ZY + Real2(this.InverseViewportSize.X, 0.0)).X;
+                
+        // Need to prevent corner anti-aliasing.
+        area.XY = this.HorizontalSharpCorner(distance, this.AddArea(Math.Sqrt(distance), e1, e2, 0.0), coords.XYZY);  
+      }
+
+      if(edge.X > 0.0) 
+      {
+        var distance = Real2();
+        var coords = Real3();
+        
+        // Find the distance to the top/bottom and offset x for bilinear interpolation.
+        coords.X = this.Uv.X - 0.25 * this.InverseViewportSize.X;
+        coords.Y = this.SearchYTop();
+        coords.Z = this.SearchYBottom();
+        distance.X = coords.Y;
+        distance.Y = coords.Z;
+        
+        // Distance in number of pixels from the current pixel to the left and right.
+        distance = Math.Abs(Math.Round((this.ViewportSize.Y * distance) - pixelCoord.YY));
+                
+        // Sample the top/bottom crossing edges
+        var e1 = this.EdgesTexture.Sample(coords.XY).Y;
+        var e2 = this.EdgesTexture.Sample(coords.XZ + Real2(0.0, this.InverseViewportSize.Y)).Y;
+        
+        // Need to prevent sharp corner anti-aliasing.
+        area.ZW = this.VerticalSharpCorner(distance, this.AddArea(Math.Sqrt(distance), e1, e2, 0.0), coords.XYXZ);
+      }
+      
+      // The below alpha is increased to debug the area texture properly.
+      if(this.DebugMode)
+        area.W = 1.0;
+        
+      this.Target0 = area;
+  }
+}
