@@ -1,0 +1,16 @@
+[Version:1]
+TextContent 
+{
+	ContentTags 
+	{
+		var Tags = Array
+		{
+			"Dave"
+		}
+	}
+	ZilchFragmentBuilder 
+	{
+		var Name = "EdgeDetectionPostProcess"
+		var ResourceId = 0x59b0a73c566f3e4f
+	}
+}

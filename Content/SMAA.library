@@ -1,0 +1,8 @@
+[Version:1]
+ContentLibrary 
+{
+	var Name = "SMAA"
+	var LibraryId = 0x59b0f6af4c9cadd3
+	var SourceControlType = ""
+	var ReadOnly = false
+}
