@@ -67,7 +67,7 @@ Level
 		}
 		Bloom 
 		{
-			var Active = false
+			var Active = true
 			var Intensity = 0.100000001
 			var Threshold = 1
 			var Bloom1 = true
@@ -79,8 +79,9 @@ Level
 		}
 		Smaa 
 		{
-			var EnableSMAA = false
-			var EnableDiagnols = false
+			var EnableSMAA = true
+			var EnableDiagnols = true
+			var DepthBasedEdges = true
 			var EdgeDetection = DetectionChance.High
 			var TargetTexture = SMAARenderTargets.FinalBlend
 			var ClearColor = Real4{0, 0, 0, 1}
@@ -183,9 +184,9 @@ Level
 		var Name = "EditorCamera"
 		Transform 
 		{
-			var Translation = Real3{-2.87730837, 4.21452904, -6.73636055}
+			var Translation = Real3{-0.878560066, 4.49521208, 7.90917778}
 			var Scale = Real3{1, 1, 1}
-			var Rotation = Quaternion{0.0485401861, 0.724586546, -0.0513036475, 0.685555339}
+			var Rotation = Quaternion{-0.152356222, 0.137275726, 0.021373922, 0.978512228}
 		}
 		CameraViewport 
 		{
@@ -225,7 +226,7 @@ Level
 			var ResolutionOrAspect = Integer2{1280, 720}
 			var RenderToViewport = true
 			var ForwardViewportEvents = false
-			var ViewportScaling = ViewportScaling.Exact
+			var ViewportScaling = ViewportScaling.Fill
 			var MarginColor = Real4{0, 0, 0, 1}
 			var NormalizedSize = Real2{1, 1}
 			var NormalizedOffset = Real2{0, 0}
@@ -242,10 +243,10 @@ Level
 		{
 			var ControlMode = ControlMode.Orbit
 			var Previous3DMode = ControlMode.Orbit
-			var LookDistance = 0.00999999978
-			var VerticalAngle = -0.141372114
-			var HorizontalAngle = -183.838516
-			var LookTarget = Real3{-2.88719344, 4.21593809, -6.73581266}
+			var LookDistance = 8.76412678
+			var VerticalAngle = 0.308923215
+			var HorizontalAngle = -264.172546
+			var LookTarget = Real3{-3.17599773, 1.83062828, -0.117757678}
 			var MoveSensitivity = 1
 		}
 	}

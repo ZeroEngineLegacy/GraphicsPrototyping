@@ -7,16 +7,38 @@ struct EdgeDetectionPostProcess
   [BuiltInInput] var InverseViewportSize : Real2;
   [StageInput] var Uv : Real2;
   [Input] var Texture : Sampler2d;
-  [Input] var ComparisonThreshold : Real = 0.01;
-  [Input] var ContrastAdaptationThreshold : Real = 2.0;
+  [Input] var DepthTexture : Sampler2d;
+  [Input] var ComparisonThreshold : Real = 0.1;
+  [Input] var DepthBasedThresholding : Boolean = true;
   [Output] var Target0 : Real4;
+
+  function DepthBasedThreshold() : Real2
+  {
+    // Just use a constant scalar as a threshold.
+    if(!this.DepthBasedThresholding)
+      return this.ComparisonThreshold.XX;
+    
+    // Get depth for current and neighboring pixels.
+    var currPixel = this.DepthTexture.Sample(this.Uv).X;
+    var leftPixel = this.DepthTexture.Sample(this.Uv + Real2(-this.InverseViewportSize.X, 0.0)).X;
+    var topPixel  = this.DepthTexture.Sample(this.Uv + Real2(0.0, -this.InverseViewportSize.Y)).X;
+    // Find depth difference of neighboring pixels.
+    var depthDelta = Real2(Math.Abs(currPixel.XX - Real2(leftPixel, topPixel)));
+    // Remove edges if they are not geometrically far enough, i.e if they belong to the same surface?
+    var possibleEdges = Math.Step(0.01.XX, depthDelta);
+    var scaledThreshold = 2.0 * this.ComparisonThreshold;
+    // Take 60% of the scaled threshold for selected edges.
+    return scaledThreshold * (1.0.XX - (0.4 * possibleEdges));
+  }
+
 
   function Main()
   { 
     
      var edge = Real2();
 
-     var lumaComparisonThreshold = this.ComparisonThreshold;
+     var lumaComparisonThreshold = this.DepthBasedThreshold();
+     
      var lumaConstants = Real3(0.2126, 0.7152, 0.0722);
     
      // Calculate lumas for the current, left and top pixel
@@ -57,7 +79,7 @@ struct EdgeDetectionPostProcess
      // Local contrast adaptation: Human eyes don't detect edges with lower contrast over higher ones if they are close
      // to each other on a given pixel, we ignore the edges with lower contrast below a threshold to avoid visaul artifacts
      // hence, we only let an edge pass if it is atleast 0.5x the maxChangeInLuma(overall).
-     edge *= Math.Step(overallMax.XX, changeInLumaLT * this.ContrastAdaptationThreshold);
+     edge *= Math.Step(overallMax.XX, changeInLumaLT * 2.0);
      
      // Edge is a 2D binary representing pixel with left/top edges as red and green colors respectively. 
      this.Target0 = Real4(edge, 0, 1);

@@ -200,16 +200,16 @@ class DeferredRendererSMAA : ZilchComponent
     alphaSettings.DepthSettings.DepthCompareFunc = TextureCompareFunc.LessEqual;
     event.AddRenderTaskRenderPass(alphaSettings, RenderGroup.AdditiveBlend, ColorOutput());
     
-    // Bloom
-    if (this.Owner.Bloom != null)
-      this.Owner.Bloom.AddRenderTasks(event, lightBuffer);
     
     //Smaa
     if(this.Owner.Smaa != null)
-    {
       this.Owner.Smaa.AddRenderTask(event, lightBuffer, depthStencil);
-    }
     
+    
+    // Bloom
+    if (this.Owner.Bloom != null)
+      this.Owner.Bloom.AddRenderTasks(event, lightBuffer);
+
     // Bring final lighting to gamma space for monitor display
     this.LinearToGamma(event, lightBuffer, final);
     

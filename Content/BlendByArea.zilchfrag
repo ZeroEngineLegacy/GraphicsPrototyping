@@ -153,7 +153,7 @@ struct BlendByArea
   function HorizontalSharpCorner(d : Real2, area : Real2, coords: Real4) : Real2
   {
     var roundingFactor = 0.75;
-    // Find the longer side on horizontal edge line.
+    // Find the longer search distance on horizontal edge line(either sides).
     var distanceLR = Math.Step(d.XY, d.YX);
     // Calc the rounding factor for each side.
     var rounding = roundingFactor * distanceLR;
@@ -198,7 +198,7 @@ struct BlendByArea
     var areaTexMaxDistance = 16.0;
     // Size of each element of the area texture.
     var areaTexPixelSize = Real2(1.0/160.0, 1.0/560.0);
-    // Used for sub-sampling.
+    // Used for sub-sampling.(Might not be always used)
     var subTexelAreaTexture = 1.0 / 7.0;
     
     // Decode the stored weigts from the 4D table using edges and distance as inputs.
@@ -218,10 +218,11 @@ struct BlendByArea
   {
     var areaTexMaxDistanceDiagnol = 20.0;
     var areaTexPixelSize = Real2(1.0/160.0, 1.0/560.0);
-    // Only used when subsampling.
-    var subTexelAreaTexture = 1.0 / 7.0;
     
+    // Only used when subsampling.(Might not be always used)
+    var subTexelAreaTexture = 1.0 / 7.0;
     var texcoord = Real2(areaTexMaxDistanceDiagnol.XX) * e + distance;
+    
     // Do a scale and bias for mapping to texel space.
     texcoord = areaTexPixelSize * texcoord + (0.5 * areaTexPixelSize);
     // Move to the second half of the texture.

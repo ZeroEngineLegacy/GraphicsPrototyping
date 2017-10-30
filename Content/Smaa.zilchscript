@@ -9,13 +9,13 @@ class Smaa : ZilchComponent
   
   [Property] var EnableSMAA : Boolean = true;
   [Property] var EnableDiagnols : Boolean = true;
-  //Detect more edges with high setting.
+  // Use depth info to reject possibly false edges.
+  [Property] var DepthBasedEdges : Boolean = true;
+  // Detect more edges with high setting.
   [Property] var EdgeDetection : DetectionChance = DetectionChance.Medium;
-  //Switch to Edge and Blend Area to debug intermidiate textures.
+  // Switch to Edge and Blend Area to debug intermidiate textures.
   [Property] var TargetTexture : SMAARenderTargets = SMAARenderTargets.FinalBlend;
   [Property] var ClearColor : Real4 = Real4(0, 0, 0, 1);
-
-
   
   function LinearToGamma(event : RenderTasksEvent, inputBuffer : RenderTarget, outputBuffer : RenderTarget)
   {
@@ -57,14 +57,18 @@ class Smaa : ZilchComponent
     renderSettings.DepthSettings.DepthMode = DepthMode.Disabled;
     renderSettings.DepthSettings.DepthCompareFunc = TextureCompareFunc.LessEqual;
     
+    //Pass uses gamma corrected values and textures. Need input in the same color space.
+    this.LinearToGamma(event, lightBuffer, colorCopy);
     
-    // First pass, need predicated thresholding here.
+    // First pass, using predicated thresholding here.
     var postProcess = EdgeDetectionPostProcess();
+      postProcess.DepthTexture = depth.Texture;
+      postProcess.DepthBasedThresholding = this.DepthBasedEdges;
     if(this.EdgeDetection == DetectionChance.Medium)
-      postProcess.ComparisonThreshold = 0.1;
+      postProcess.ComparisonThreshold = 0.07;
     else
       postProcess.ComparisonThreshold = 0.05;
-    postProcess.Texture = lightBuffer.Texture;
+    postProcess.Texture = colorCopy.Texture;
     renderSettings.ColorTarget = edges;
     event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
     event.AddRenderTaskPostProcess(renderSettings, postProcess);
@@ -82,9 +86,7 @@ class Smaa : ZilchComponent
     event.AddRenderTaskClearTarget(renderSettings, this.ClearColor, 1.0);
     event.AddRenderTaskPostProcess(renderSettings, areasPostProcess);
     
-    // Final pass, needs non-Linear space.
-    this.LinearToGamma(event, lightBuffer, colorCopy);
-    
+    // Final pass.
     var blendPostProcess = NeighborhoodBlend();
     blendPostProcess.AreaTexture = areas.Texture;
     blendPostProcess.ColorTexture = colorCopy.Texture;
@@ -108,6 +110,7 @@ class Smaa : ZilchComponent
     event.AddRenderTaskPostProcess(renderSettings, renderPass);
     
     // The renderer must be doing a final LinearToGamma pass in Deferred Renderer.
+    // Set the values back to linear space for other operations that might come after smaa.
     this.GammaToLinear(event, colorCopy, lightBuffer);
 
     // Release the rendertargets used for SMAA.
