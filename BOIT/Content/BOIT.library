@@ -1,0 +1,8 @@
+[Version:1]
+ContentLibrary 
+{
+	var Name = "BOIT"
+	var LibraryId = 0x5983497800e9d8de
+	var SourceControlType = ""
+	var ReadOnly = false
+}

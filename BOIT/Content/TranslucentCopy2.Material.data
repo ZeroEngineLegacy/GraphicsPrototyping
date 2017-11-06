@@ -1,0 +1,12 @@
+[Version:1]
+Material 
+{
+	var RenderGroups = Array
+	{
+		"5983440e11e8a0fa:Translucent"
+	}
+	ColorValue 
+	{
+		var Color = Real4{0.749019623, 0.749019623, 0, 0.25}
+	}
+}

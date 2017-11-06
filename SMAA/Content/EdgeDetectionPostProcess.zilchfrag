@@ -26,8 +26,10 @@ struct EdgeDetectionPostProcess
     var depthDelta = Real2(Math.Abs(currPixel.XX - Real2(leftPixel, topPixel)));
     // Remove edges if they are not geometrically far enough, i.e if they belong to the same surface?
     var possibleEdges = Math.Step(0.01.XX, depthDelta);
+    // Globally scale the threshold. Notice that if local scale below will results in 1 then (no Edge)
+    // then the scaled global threshold in used in the edge detection thus minimizing the detected edges.
     var scaledThreshold = 2.0 * this.ComparisonThreshold;
-    // Take 60% of the scaled threshold for selected edges.
+    // Scale the global threshold by 60% if there are edges detected.
     return scaledThreshold * (1.0.XX - (0.4 * possibleEdges));
   }
 

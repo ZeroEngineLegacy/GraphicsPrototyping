@@ -1,0 +1,19 @@
+[Version:1]
+DataContent 
+{
+	DataBuilder 
+	{
+		var Name = "Translucent"
+		var ResourceId = 0x59b50a51e7b3e119
+		var LoaderType = "Material"
+		var Version = 0
+		var ShowInEditor = true
+	}
+	ContentTags 
+	{
+		var Tags = Array
+		{
+			"Dave"
+		}
+	}
+}

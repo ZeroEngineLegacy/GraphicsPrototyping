@@ -1,0 +1,25 @@
+// [Paper] http://jcgt.org/published/0002/02/09/paper.pdf
+// [Blog] http://casual-effects.blogspot.com/2014/03/weighted-blended-order-independent.html
+
+[Pixel][PostProcess]
+struct WeighComposite
+{
+  [StageInput] var Uv : Real2;
+  [Input] var Accum : Sampler2d;
+  [Input] var Reveal : Sampler2d;
+  
+  [Output] var Target0 : Real4;
+
+  function Main()
+  {
+    var revealage = this.Reveal.Sample(this.Uv).X;
+    
+    var accum = this.Accum.Sample(this.Uv);
+    
+    // [SrcColor * BlendFactor] "+" [DestColor * BlendFactor].
+    // [(accum.rgb * weight)/(accum.a * weight) * (1 - revealage)] "+" [DestColor * revealage] 
+    // Prevent Division by zero(1e-5).
+    // Look at equation 6 from the paper listed at top of this file.
+    this.Target0 = Real4(accum.XYZ / Math.Max(accum.W, 1e-5), revealage);
+  }
+}

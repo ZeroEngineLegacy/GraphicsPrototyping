@@ -1,0 +1,9 @@
+[Version:1]
+TextContent 
+{
+	ZilchFragmentBuilder 
+	{
+		var Name = "WeighPass"
+		var ResourceId = 0x59934249f9d8f5f1
+	}
+}
