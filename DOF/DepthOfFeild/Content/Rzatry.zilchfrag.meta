@@ -1,0 +1,9 @@
+[Version:1]
+TextContent 
+{
+	ZilchFragmentBuilder 
+	{
+		var Name = "Rzatry"
+		var ResourceId = 0x5a42de22aac07657
+	}
+}

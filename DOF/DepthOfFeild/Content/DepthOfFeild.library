@@ -1,0 +1,8 @@
+[Version:1]
+ContentLibrary 
+{
+	var Name = "DepthOfFeild"
+	var LibraryId = 0x5a42c0f20a7c00c7
+	var SourceControlType = ""
+	var ReadOnly = false
+}
