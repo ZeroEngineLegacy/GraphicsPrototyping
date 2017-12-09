@@ -1,0 +1,8 @@
+[Version:1]
+ContentLibrary 
+{
+	var Name = "GodRays"
+	var LibraryId = 0x5a78736e4a6dff93
+	var SourceControlType = ""
+	var ReadOnly = false
+}
