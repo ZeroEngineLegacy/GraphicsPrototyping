@@ -81,8 +81,8 @@ Level
 		{
 			var Enable = true
 			var BlurAmount = BlurValue.High
-			var FocusDistance = 28.4749203
-			var FocusRange = 5
+			var FocusDistance = 20.3714867
+			var FocusRange = 0
 		}
 	}
 	Cog [ContextId:3]
@@ -182,9 +182,9 @@ Level
 		var Name = "EditorCamera"
 		Transform 
 		{
-			var Translation = Real3{15.623558, 8.85266972, -11.3105917}
+			var Translation = Real3{-12.493391, 6.28196764, 1.27535677}
 			var Scale = Real3{1, 1, 1}
-			var Rotation = Quaternion{-0.119757392, 0.686189532, 0.116060458, 0.708048105}
+			var Rotation = Quaternion{-0.194800302, -0.309669495, -0.0649754703, 0.928405106}
 		}
 		CameraViewport 
 		{
@@ -241,10 +241,10 @@ Level
 		{
 			var ControlMode = ControlMode.Orbit
 			var Previous3DMode = ControlMode.Orbit
-			var LookDistance = 2.59807611
-			var VerticalAngle = 0.33510372
-			var HorizontalAngle = -89.5040359
-			var LookTarget = Real3{13.1712027, 7.9982481, -11.3875093}
+			var LookDistance = 1.74154234
+			var VerticalAngle = 0.413644224
+			var HorizontalAngle = -87.3207016
+			var LookTarget = Real3{-11.5360928, 5.58195686, 0}
 			var MoveSensitivity = 1
 		}
 	}

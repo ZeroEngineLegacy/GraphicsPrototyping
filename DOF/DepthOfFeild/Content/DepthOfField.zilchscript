@@ -45,7 +45,7 @@ class DepthOfField : ZilchComponent
     var dofPass = DepthOfFeildPass();
     dofPass.ViewPosTexture = depthTarget;
     dofPass.FocusDistance = this.FocusDistance;
-    dofPass.InvFocusRange = 1.0 / this.FocusRange;
+    dofPass.InvFocusRange = 1.0 / (this.FocusRange + 0.000001);
     dofPass.TextureFocus = colorCopy.Texture;
     dofPass.TextureBlurred = blurredColor.Texture;
     event.AddRenderTaskClearTarget(renderSettings, Real4(0, 0, 0, 1), 1.0);
