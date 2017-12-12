@@ -19,7 +19,7 @@ struct DepthOfFeildPass
     
     //  Get the Focus Color, Blurred Color and Circle of Confusion.
     // How far is the current pixel from focal point.
-    var disToFocal = depth - this.FocusDistance;
+    var disToFocal = Math.Abs(depth - this.FocusDistance);
     // Divide the distance by focalRange to calc "Blur Factor"
     var coc = Math.Saturate(disToFocal * this.InvFocusRange);
     // Get a blur and un-blurred texture sample.

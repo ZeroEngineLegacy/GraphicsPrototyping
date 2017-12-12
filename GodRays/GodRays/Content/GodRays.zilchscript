@@ -38,11 +38,11 @@ class GodRays : ZilchComponent
     rayMarchPass.IntensityScale = this.Intensity;
     // Can expose these properties if needed.
     rayMarchPass.Steps = 64.0;
-    rayMarchPass.StepsDelta = 1.0 / 63.0;
+    rayMarchPass.StepsDelta = 1.0 / 64.0;
     rayMarchPass.InitDecay = 0.2;
     rayMarchPass.MaxDelta = 0.005;
     rayMarchPass.SunPosUV = sunPosUv;
-    rayMarchPass.DistDecay = 0.8;
+    rayMarchPass.DistDecay = 0.9;
     
     // Set target for light intensity.
     renderSettings.ColorTarget = light;

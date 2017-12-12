@@ -35,8 +35,7 @@ struct EdgeDetectionPostProcess
 
 
   function Main()
-  { 
-    
+  {
      var edge = Real2();
 
      var lumaComparisonThreshold = this.DepthBasedThreshold();
@@ -55,7 +54,7 @@ struct EdgeDetectionPostProcess
      edge = Math.Step(lumaComparisonThreshold.XX, changeInLumaLT);
           
      // Compare the neighboring fragments and discard if the luma differnce below threshold.
-     // We want the threshold to be <= changeInLuma, otherwise not edge.
+     // We want the threshold to be <= changeInLuma, otherwise not an edge.
      if (Math.Dot(edge, Real2(1.0, 1.0)) == 0.0)
         Shader.Discard();
         
