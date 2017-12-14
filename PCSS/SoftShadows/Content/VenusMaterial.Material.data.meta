@@ -1,0 +1,12 @@
+[Version:1]
+DataContent 
+{
+	DataBuilder 
+	{
+		var Name = "VenusMaterial"
+		var ResourceId = 0x5a7d3ff04f7f4a7d
+		var LoaderType = "Material"
+		var Version = 0
+		var ShowInEditor = true
+	}
+}

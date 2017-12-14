@@ -1,0 +1,8 @@
+[Version:1]
+ContentLibrary 
+{
+	var Name = "SoftShadows"
+	var LibraryId = 0x5a7c1765043d8ae3
+	var SourceControlType = ""
+	var ReadOnly = false
+}
