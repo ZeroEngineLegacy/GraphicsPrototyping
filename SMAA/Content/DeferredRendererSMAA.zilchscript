@@ -44,8 +44,8 @@ class DeferredRendererSMAA : ZilchComponent
     if (false)
     {
       var testDiff = TestDiff();
-      testDiff.Texture1 = Texture.WEIGHT3source;
-      testDiff.Texture2 = Texture.WEIGHT3test;
+      //testDiff.Texture1 = Texture.WEIGHT3source;
+      //testDiff.Texture2 = Texture.WEIGHT3test;
       event.AddRenderTaskPostProcess(final, testDiff);
       return;
     }
