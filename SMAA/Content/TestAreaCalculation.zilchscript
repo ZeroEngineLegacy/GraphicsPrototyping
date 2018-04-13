@@ -1,0 +1,47 @@
+class TestAreaCalculation : ZilchComponent
+{
+  function Initialize(init : CogInitializer)
+  {
+    var red = Real4(1, 0, 0, 0);
+    var green = Real4(0, 1, 0, 0);
+    var yellow = Real4(1, 1, 0, 0);
+    
+    var edgeTex = TextureData(TextureFormat.RG8, 12, 9);
+    
+    edgeTex.Set(5, 1, yellow);
+    edgeTex.Set(6, 1, green);
+    edgeTex.Set(7, 1, red);
+    
+    edgeTex.Set(2, 2, yellow);
+    edgeTex.Set(3, 2, green);
+    edgeTex.Set(4, 2, green);
+    edgeTex.Set(7, 2, green);
+    edgeTex.Set(8, 2, green);
+    edgeTex.Set(9, 2, green);
+    edgeTex.Set(10, 2, red);
+    
+    edgeTex.Set(1, 3, yellow);
+    edgeTex.Set(10, 3, green);
+    edgeTex.Set(11, 3, green);
+    
+    edgeTex.Set(1, 4, red);
+    
+    edgeTex.Set(1, 5, green);
+    edgeTex.Set(2, 5, red);
+    
+    edgeTex.Set(2, 6, green);
+    edgeTex.Set(3, 6, red);
+    edgeTex.Set(9, 6, yellow);
+    edgeTex.Set(10, 6, green);
+    edgeTex.Set(11, 6, green);
+    
+    edgeTex.Set(3, 7, green);
+    edgeTex.Set(4, 7, red);
+    edgeTex.Set(7, 7, yellow);
+    edgeTex.Set(8, 7, green);
+    
+    edgeTex.Set(4, 8, green);
+    edgeTex.Set(5, 8, green);
+    edgeTex.Set(6, 8, green);
+  }
+}

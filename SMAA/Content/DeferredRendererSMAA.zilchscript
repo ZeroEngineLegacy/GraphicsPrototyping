@@ -35,8 +35,20 @@ class DeferredRendererSMAA : ZilchComponent
 
   function OnRenderTasksUpdate(event : RenderTasksEvent)
   {
-    var viewportSize = event.ViewportSize;
+    //var viewportSize = event.ViewportSize;
+    //var viewportSize = Integer2(16, 16);
+    var viewportSize = Integer2(1280, 720);
     var final = event.GetFinalTarget(viewportSize, TextureFormat.RGBA8);
+    
+    // test diff
+    if (false)
+    {
+      var testDiff = TestDiff();
+      testDiff.Texture1 = Texture.WEIGHT3source;
+      testDiff.Texture2 = Texture.WEIGHT3test;
+      event.AddRenderTaskPostProcess(final, testDiff);
+      return;
+    }
     
     // Geometry pass
     var geometryBuffer0 = event.GetRenderTarget(viewportSize, TextureFormat.RGBA32f);
@@ -200,10 +212,22 @@ class DeferredRendererSMAA : ZilchComponent
     alphaSettings.DepthSettings.DepthCompareFunc = TextureCompareFunc.LessEqual;
     event.AddRenderTaskRenderPass(alphaSettings, RenderGroup.AdditiveBlend, ColorOutput());
     
-    
     //Smaa
     if(this.Owner.Smaa != null)
+    {
       this.Owner.Smaa.AddRenderTask(event, lightBuffer, depthStencil);
+      
+      //var target = event.GetRenderTarget(viewportSize, TextureFormat.RGB8);
+      ////var copyTarget = GammaToLinearPass();
+      //var copyTarget = CopyTarget();
+      //copyTarget.Texture = Texture.Unigine06;
+      //event.AddRenderTaskPostProcess(target, copyTarget);
+      //this.Owner.Smaa.AddRenderTask(event, target, depthStencil);
+      
+      //copyTarget.Texture = target.Texture;
+      //event.AddRenderTaskPostProcess(final, copyTarget);
+      //return;
+    }
     
     // Bloom
     if (this.Owner.Bloom != null)

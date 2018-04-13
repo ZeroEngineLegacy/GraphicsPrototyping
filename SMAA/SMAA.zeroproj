@@ -13,7 +13,7 @@ Cog
 	}
 	WindowLaunchSettings 
 	{
-		var LaunchFullscreen = true
+		var LaunchFullscreen = false
 		var WindowedResolution = Integer2{1280, 720}
 	}
 	FrameRateSettings 
@@ -28,8 +28,8 @@ Cog
 		var ExperimentalBranchName = ""
 		var MajorVersion = 1
 		var MinorVersion = 1
-		var PatchVersion = 0
-		var RevisionId = 406
-		var ShortChangeSet = "a461d49c2231"
+		var PatchVersion = 3
+		var RevisionId = 509
+		var ShortChangeSet = "ef711b9dcb89"
 	}
 }

@@ -1,0 +1,9 @@
+[Pixel]
+struct TestInput
+{
+  [FragmentInput] var TestValue : Real = 1.0;
+  
+  function Main()
+  {
+  }
+}

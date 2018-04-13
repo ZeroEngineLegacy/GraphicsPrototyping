@@ -1,0 +1,12 @@
+[Version:1]
+Material 
+{
+	var RenderGroups = Array
+	{
+		"56dc0b2bbc86c4cb:AlphaBlend"
+	}
+	ColorMap 
+	{
+		var Texture = "58269ef7734c0e55:Grey"
+	}
+}

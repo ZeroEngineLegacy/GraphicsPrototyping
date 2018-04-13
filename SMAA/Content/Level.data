@@ -25,7 +25,7 @@ Level
 		}
 		GridDraw 
 		{
-			var Active = true
+			var Active = false
 			var HalfCellOffset = false
 			var CellSize = 1
 			var Axis = AxisDirection.Y
@@ -45,7 +45,7 @@ Level
 		DeferredRendererSMAA 
 		{
 			var GeometryDebug = GeometryValue.None
-			var EditorDebugDraw = false
+			var EditorDebugDraw = true
 			var GameDebugDraw = true
 			var RenderDiffuse = true
 			var RenderSpecular = true
@@ -67,7 +67,7 @@ Level
 		}
 		Bloom 
 		{
-			var Active = true
+			var Active = false
 			var Intensity = 0.100000001
 			var Threshold = 1
 			var Bloom1 = true
@@ -81,10 +81,9 @@ Level
 		{
 			var EnableSMAA = true
 			var EnableDiagnols = true
-			var DepthBasedEdges = true
-			var EdgeDetection = DetectionChance.High
+			var DepthBasedEdges = false
+			var EdgeDetection = DetectionChance.Medium
 			var TargetTexture = SMAARenderTargets.FinalBlend
-			var ClearColor = Real4{0, 0, 0, 1}
 		}
 	}
 	Cog [ContextId:3]
@@ -184,9 +183,9 @@ Level
 		var Name = "EditorCamera"
 		Transform 
 		{
-			var Translation = Real3{7.56151676, 4.10653973, -3.60989523}
+			var Translation = Real3{0.250345707, 6.29085302, 0.30154562}
 			var Scale = Real3{1, 1, 1}
-			var Rotation = Quaternion{0.0031854026, 0.793617547, -0.00415517576, 0.608394444}
+			var Rotation = Quaternion{-0.104543984, 0.302074492, 0.033349216, 0.946947455}
 		}
 		CameraViewport 
 		{
@@ -226,8 +225,8 @@ Level
 			var ResolutionOrAspect = Integer2{1280, 720}
 			var RenderToViewport = true
 			var ForwardViewportEvents = false
-			var ViewportScaling = ViewportScaling.Fill
-			var MarginColor = Real4{0, 0, 0, 1}
+			var ViewportScaling = ViewportScaling.Exact
+			var MarginColor = Real4{0.160000026, 0.160000026, 0.160000026, 1}
 			var NormalizedSize = Real2{1, 1}
 			var NormalizedOffset = Real2{0, 0}
 		}
@@ -237,16 +236,16 @@ Level
 			var FarPlane = 200
 			var PerspectiveMode = PerspectiveMode.Perspective
 			var FieldOfView = 45
-			var Size = 0.0448168889
+			var Size = 4.4816885
 		}
 		EditorCameraController 
 		{
 			var ControlMode = ControlMode.Orbit
 			var Previous3DMode = ControlMode.Orbit
-			var LookDistance = 0.177402586
-			var VerticalAngle = -0.0104713785
-			var HorizontalAngle = -315.992767
-			var LookTarget = Real3{7.39021015, 4.10839748, -3.56382728}
+			var LookDistance = 8.62591934
+			var VerticalAngle = 0.219911352
+			var HorizontalAngle = -314.776855
+			var LookTarget = Real3{-4.62438726, 4.40916824, -6.56159687}
 			var MoveSensitivity = 1
 		}
 	}
@@ -457,6 +456,28 @@ Level
 			var GroupSortValue = 0
 			var Material = "592ea30d196f6062:VenusMaterial"
 			var Mesh = "57b24459d8122a05:Wedge"
+		}
+	}
+	Cog [ContextId:10]
+	{
+		var Name = "dragon"
+		Transform 
+		{
+			var Translation = Real3{0, 10, 0}
+			var Scale = Real3{1, 1, 1}
+			var Rotation = Quaternion{0, 0, 0, 1}
+		}
+		Model 
+		{
+			var Visible = true
+			var ViewCulling = true
+			var VisibilityEvents = true
+			var OverrideBoundingBox = false
+			var LocalAabbCenter = Real3{0, 0, 0}
+			var LocalAabbHalfExtents = Real3{1, 1, 1}
+			var GroupSortValue = 0
+			var Material = "5a76a7e838ea3eed:TestAreaTex"
+			var Mesh = "590408f1c0e92c14:Quad"
 		}
 	}
 }

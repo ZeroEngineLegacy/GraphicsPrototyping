@@ -1,0 +1,21 @@
+// PostProcess fragments are intended to be constructed in script
+// and passed directly to the AddRenderTaskPostProcess method.
+[Pixel][PostProcess]
+struct TestDiff
+{
+  [StageInput] var Uv : Real2;
+  [Input] var Texture1 : Sampler2d;
+  [Input] var Texture2 : Sampler2d;
+
+  [Output] var Target0 : Real4;
+
+  function Main()
+  {
+    var a = this.Texture1.Sample(this.Uv);
+    var b = this.Texture2.Sample(this.Uv);
+    
+    var diff = Math.Abs(a - b);
+    
+    this.Target0 = Real4(Math.Length(diff) * 100000, 0, 0, 1);
+  }
+}

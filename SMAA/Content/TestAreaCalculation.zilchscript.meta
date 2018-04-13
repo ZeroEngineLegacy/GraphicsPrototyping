@@ -1,0 +1,9 @@
+[Version:1]
+TextContent 
+{
+	ZilchScriptBuilder 
+	{
+		var Name = "TestAreaCalculation"
+		var ResourceId = 0x5a763d290fc6e768
+	}
+}
