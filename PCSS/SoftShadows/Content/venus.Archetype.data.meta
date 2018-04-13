@@ -1,16 +1,10 @@
 [Version:1]
 DataContent 
 {
-	ContentTags 
-	{
-		var Tags = Array
-		{
-		}
-	}
 	DataBuilder 
 	{
-		var Name = "dragon"
-		var ResourceId = 0x592eb571a3e3172f
+		var Name = "venus"
+		var ResourceId = 0x5a7d3fcf36cbe93c
 		var LoaderType = "Cog"
 		var Version = 0
 		var ShowInEditor = true

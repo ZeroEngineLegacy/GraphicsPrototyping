@@ -9,9 +9,9 @@ DataContent
 	}
 	DataBuilder 
 	{
-		var Name = "dragon"
-		var ResourceId = 0x592eb571a3e3172f
-		var LoaderType = "Cog"
+		var Name = "Level"
+		var ResourceId = 0x576f215c0825c3a8
+		var LoaderType = "Level"
 		var Version = 0
 		var ShowInEditor = true
 	}

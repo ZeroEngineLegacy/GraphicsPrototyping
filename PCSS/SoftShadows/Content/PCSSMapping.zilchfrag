@@ -1,0 +1,144 @@
+// Compares a pixel depth with a depth buffer rendered from the a light's perspective
+// to determine if the pixel is visible to the light.
+[Pixel]
+struct PCSSMapping
+{
+  [BuiltInInput] var PerspectiveToView : Real4x4;
+  [BuiltInInput] var ViewToWorld : Real4x4;
+  
+  [StageInput] var PerspectivePosition : Real4;
+  
+  [FragmentInput] var GeoNormal : Real3;
+  [FragmentInput] var GeoPosition : Real3;
+  
+  [Input] var LightTransform : Real4x4;
+  [Input] var ShadowBuffer : SamplerShadow2d;
+  [Input] var NormalOffsetBias : Real = 0.1;
+  
+  [Output] var ShadowFactor : Real;
+  
+
+  
+  function Main()
+  {
+    var viewPosition = this.GeoPosition + this.GeoNormal * this.NormalOffsetBias;
+    var worldPosition = Math.MultiplyPoint(this.ViewToWorld, viewPosition);
+    var shadowPosition = Math.Multiply(this.LightTransform, Real4(worldPosition, 1.0));
+    
+    var uv = shadowPosition.XYZ / shadowPosition.W;
+    uv = uv * Real3(0.5, -0.5, 0.5) + Real3(0.5);
+    
+    this.ShadowFactor = ShadowMapping.ComputePcf5x5(uv, &this.ShadowBuffer);
+  }
+  
+  [Static]
+  function ComputePcf5x5(uv : Real3, shadowBuffer : ref SamplerShadow2d) : Real
+  {
+    var shadowFactor = 0.0;
+    
+    var step = Real2(1.0) / shadowBuffer.SampleSize(0);
+    for (var v = -2; v <= 2; ++v)
+    {
+      for (var u = -2; u <= 2; ++u)
+      {
+        shadowFactor += shadowBuffer.Sample(uv + Real3(Real2(u, v) * step, 0.0));
+      }
+    }
+    shadowFactor /= 25.0;
+    
+    // Apply inverse gamma so that when scene is brought to gamma space
+    // the shadow interpolation looks perceptively linear
+    shadowFactor = Math.Pow(shadowFactor, 2.2);
+    
+    // If outside the shadow map then we want the ShadowFactor to be 1.0 (fully lit)
+    var outsideShadow = uv.X < 0.0 || uv.Y < 0.0 || uv.X > 1.0 || uv.Y > 1.0;
+    shadowFactor = Math.Max(shadowFactor, (outsideShadow as Real));
+    
+    return shadowFactor;
+  }
+  
+  [Static]
+  function ComputePCSS(uv : Real3, shadowBuffer : ref SamplerShadow2d, shadowPointBuffer : ref Sampler2d, lightSize : Real) : Real
+  {
+    // This kernel may be passed as a parameter.
+    // http://people.cs.ubc.ca/~rbridson/docs/bridson-siggraph07-poissondisk.pdf
+    var poisson : FixedArray[Real2, 32] = FixedArray[Real2, 32]()
+    {
+      Real2(-0.6416025, -0.682008 ),
+      Real2(-0.4246846, -0.8633018),
+      Real2(-0.690881 ,-0.3700598 ),
+      Real2(-0.3546428, -0.4851093),
+      Real2(0.0207778 ,-0.937071  ),
+      Real2(-0.1098182, -0.6859506),
+      Real2(0.0970289 ,-0.5108399 ),
+      Real2(0.4377642 ,-0.8943084 ),
+      Real2(0.5146934 ,-0.4189969 ),
+      Real2(0.1921492 ,-0.1037789 ),
+      Real2(-0.2069662, -0.2415061),
+      Real2(0.6644614 ,-0.7234581 ),
+      Real2(0.6065708 ,-0.1568125 ),
+      Real2(0.8754243 ,-0.1878651 ),
+      Real2(0.423604   ,0.07472919  ),
+      Real2(-0.5025973 ,-0.1155073),
+      Real2(-0.6456386 ,0.1203945 ),
+      Real2(-0.9571444 ,-0.1232506),
+      Real2(0.8956973  ,0.294899   ),
+      Real2(0.06626377 ,0.3450965 ),
+      Real2(0.4800584  ,0.5336111  ),
+      Real2(-0.1157437 ,0.1343438 ),
+      Real2(0.4729416  ,0.8449073  ),
+      Real2(0.1196302  ,0.6572753  ),
+      Real2(-0.1799291 ,0.9296335 ),
+      Real2(0.09123146 ,0.9379323 ),
+      Real2(-0.2738193 ,0.5724515 ),
+      Real2(-0.7153103 ,0.4065447 ),
+      Real2(-0.6433817 ,0.7181715 ),
+      Real2(0.7572759  ,0.5696939  ),
+      Real2(-0.3689905 ,0.3102731 ),
+      Real2(-0.9443915 ,0.2384908 )
+    };
+    
+    var shadowFactor = 1.0;
+    var blockerCount = 0.0;
+    var avgBlockerDepth = 0.0;
+    var step = Real2(1.0) / shadowBuffer.SampleSize(0);
+    var nearPlane = 0.09;
+    
+    // Blocker search average.
+    var searchArea = lightSize * step * (uv.Z - nearPlane) / uv.Z;
+    
+    for(var i = 0; i < 32; ++i)
+    {
+      var smapDepth = shadowPointBuffer.Sample(uv.XY + poisson[i] * searchArea).X;
+      
+      if(smapDepth < uv.Z)
+      {
+        blockerCount += 1.0;
+        avgBlockerDepth += smapDepth;
+      }
+    }
+    
+    avgBlockerDepth = avgBlockerDepth / blockerCount;
+    
+    // No shadow factor if no blocker.
+    if(blockerCount < 1.0)
+      return 1.0;
+      
+    // Penumbra size estimation.
+    var disBlockerToReciever = uv.Z - avgBlockerDepth;
+    var wPenumbraSizeRatio = disBlockerToReciever / avgBlockerDepth;
+    var sampleRadius = wPenumbraSizeRatio * lightSize * step * (nearPlane / uv.Z);
+    
+    for(var i = 0; i < 32; ++i)
+    {
+      var offset = poisson[i] * sampleRadius;
+      shadowFactor += shadowBuffer.SampleLod(Real3(uv.XY + offset , uv.Z), 0.0);
+    }
+    
+    shadowFactor /= 32.0;
+    
+    shadowFactor = Math.Pow(shadowFactor, 2.2);
+      
+    return shadowFactor;
+  }
+}
